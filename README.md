@@ -4,3 +4,4 @@
 * ajouter une dependance dotenv
 * mettre son mdp dans le dotenv
 * injecter les variables dotenv dans le code en utilisant ${NOM_VARIABLE_DOTENV}
+* mettre le .env dans gitignore
