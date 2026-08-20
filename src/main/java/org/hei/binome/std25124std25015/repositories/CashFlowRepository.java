@@ -1,12 +1,14 @@
 package org.hei.binome.std25124std25015.repositories;
 
 import org.hei.binome.std25124std25015.config.DatabaseConnection;
+import org.hei.binome.std25124std25015.dto.BalanceDto;
 import org.hei.binome.std25124std25015.models.CashFlow;
 import org.hei.binome.std25124std25015.models.User;
 import org.hei.binome.std25124std25015.models.Donation;
 import org.hei.binome.std25124std25015.models.Expense;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -141,5 +143,38 @@ public class CashFlowRepository {
         }
 
         return cashFlows;
+    }
+
+    public BalanceDto getBalance() {
+        String sql = """
+        SELECT 
+            COALESCE(SUM(CASE WHEN d.id IS NOT NULL THEN c.amount ELSE 0 END), 0) AS total_inflow,
+            COALESCE(SUM(CASE WHEN e.id IS NOT NULL THEN c.amount ELSE 0 END), 0) AS total_outflow
+        FROM cashflow c
+        LEFT JOIN donation d ON c.id = d.id
+        LEFT JOIN expense e ON c.id = e.id
+    """;
+
+        try (Connection connection = databaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+
+            if (resultSet.next()) {
+                BigDecimal totalInflow = resultSet.getBigDecimal("total_inflow");
+                BigDecimal totalOutflow = resultSet.getBigDecimal("total_outflow");
+                BigDecimal balance = totalInflow.subtract(totalOutflow);
+
+                return BalanceDto.builder()
+                        .totalInflow(totalInflow)
+                        .totalOutflow(totalOutflow)
+                        .balance(balance)
+                        .build();
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors du calcul de la solde", e);
+        }
+
+        return new BalanceDto(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
     }
 }

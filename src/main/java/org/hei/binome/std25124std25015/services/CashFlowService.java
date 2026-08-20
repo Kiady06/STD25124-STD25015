@@ -1,5 +1,6 @@
 package org.hei.binome.std25124std25015.services;
 
+import org.hei.binome.std25124std25015.dto.BalanceDto;
 import org.hei.binome.std25124std25015.models.CashFlow;
 import org.hei.binome.std25124std25015.repositories.CashFlowRepository;
 import org.hei.binome.std25124std25015.repositories.UserRepository;
@@ -37,5 +38,9 @@ public class CashFlowService {
         }
 
         return cashFlowRepository.findAll(type);
+    }
+
+    public BalanceDto getBalance() {
+        return cashFlowRepository.getBalance();
     }
 }
