@@ -27,4 +27,15 @@ public class CashFlowService {
 
         return cashFlowRepository.getByUser(userId);
     }
+
+    public List<CashFlow> getAllCashFlows(String type) {
+        if (type != null && !type.trim().isEmpty()) {
+            String cleanType = type.trim().toLowerCase();
+            if (!cleanType.equals("donation") && !cleanType.equals("expense")) {
+                throw new IllegalArgumentException("Le type de cashflow invalide. Valeurs acceptées : 'donation' ou 'expense'.");
+            }
+        }
+
+        return cashFlowRepository.findAll(type);
+    }
 }

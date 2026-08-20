@@ -101,5 +101,45 @@ public class CashFlowRepository {
                     user
             );
         }
+
+    }
+    public List<CashFlow> findAll(String type) {
+        List<CashFlow> cashFlows = new ArrayList<>();
+
+        String sql = """
+        SELECT c.id, c.created_at, c.amount, c.id_user,
+               u.ref, u.first_name, u.last_name, u.email, u.phone,
+               d.comment,
+               e.reason, e.frequency
+        FROM cashflow c
+        INNER JOIN "user" u ON c.id_user = u.id
+        LEFT JOIN donation d ON c.id = d.id
+        LEFT JOIN expense e ON c.id = e.id
+        WHERE (? IS NULL)\s
+           OR (? = 'donation' AND d.id IS NOT NULL)\s
+           OR (? = 'expense' AND e.id IS NOT NULL)
+        ORDER BY c.created_at DESC
+   \s""";
+
+        try (Connection connection = databaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            String cleanType = (type != null && !type.trim().isEmpty()) ? type.trim().toLowerCase() : null;
+
+            preparedStatement.setString(1, cleanType);
+            preparedStatement.setString(2, cleanType);
+            preparedStatement.setString(3, cleanType);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    cashFlows.add(mapResultSetToCashFlow(resultSet));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la récupération des cashflows", e);
+        }
+
+        return cashFlows;
     }
 }
