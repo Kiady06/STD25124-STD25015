@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-public class ClashFlow {
+public class CashFlow {
     private String id;
     private Instant createdAt;
     private BigDecimal amount;
