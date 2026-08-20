@@ -5,19 +5,20 @@ import org.hei.binome.std25124std25015.models.CashFlow;
 import org.hei.binome.std25124std25015.models.User;
 import org.hei.binome.std25124std25015.models.Donation;
 import org.hei.binome.std25124std25015.models.Expense;
+import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-public class cashFlowRepository {
+@Repository
+public class CashFlowRepository {
     private final DatabaseConnection databaseConnection;
 
-    public cashFlowRepository(DatabaseConnection databaseConnection) {
+    public CashFlowRepository(DatabaseConnection databaseConnection) {
         this.databaseConnection = databaseConnection;
     }
 
