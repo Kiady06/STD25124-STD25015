@@ -15,5 +15,5 @@ public class User {
     private String lastName;
     private String email;
     private String phone;
-    private List<ClashFlow> clashFlows;
+    private List<CashFlow> clashFlows;
 }

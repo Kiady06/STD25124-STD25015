@@ -1,6 +1,7 @@
 package org.hei.binome.std25124std25015.repositories;
 
 import org.hei.binome.std25124std25015.config.DatabaseConnection;
+import org.hei.binome.std25124std25015.dto.Donnationdto;
 import org.hei.binome.std25124std25015.models.CashFlow;
 import org.hei.binome.std25124std25015.models.*;
 
@@ -39,11 +40,10 @@ public class cashFlowRepository {
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                Donation donation = new Donation();
+                Donnationdto donation = new Donnationdto();
                 donation.setId(rs.getString("id"));
-                donation.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                donation.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toInstant());
                 donation.setAmount(rs.getBigDecimal("amount"));
-                donation.setIdUser(rs.getString("id_user"));
                 donation.setComment(rs.getString("comment"));
                 donations.add(donation);
             }
@@ -65,11 +65,11 @@ public class cashFlowRepository {
             while (rs.next()) {
                 Expense expense = new Expense();
                 expense.setId(rs.getString("id"));
-                expense.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                expense.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toInstant());
                 expense.setAmount(rs.getBigDecimal("amount"));
                 expense.setIdUser(rs.getString("id_user"));
                 expense.setReason(rs.getString("reason"));
-                expense.setFrequency(ExpenseFrequency.valueOf(rs.getString("frequency")));
+                expense.setFrequency(Expense.ExpenseFrequency.valueOf(rs.getString("frequency")));
                 expenses.add(expense);
             }
         }
