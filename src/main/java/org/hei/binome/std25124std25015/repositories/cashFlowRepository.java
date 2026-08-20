@@ -1,14 +1,16 @@
 package org.hei.binome.std25124std25015.repositories;
 
 import org.hei.binome.std25124std25015.config.DatabaseConnection;
-import org.hei.binome.std25124std25015.dto.Donnationdto;
 import org.hei.binome.std25124std25015.models.CashFlow;
-import org.hei.binome.std25124std25015.models.*;
+import org.hei.binome.std25124std25015.models.User;
+import org.hei.binome.std25124std25015.models.Donation;
+import org.hei.binome.std25124std25015.models.Expense;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,61 +21,84 @@ public class cashFlowRepository {
         this.databaseConnection = databaseConnection;
     }
 
-    public List<CashFlow> findByType(String type) throws SQLException {
-        if ("donation".equalsIgnoreCase(type)) {
-            return findDonations();
+    public List<CashFlow> getByUser(String userId) {
+        List<CashFlow> cashFlows = new ArrayList<>();
+
+        String sql = """
+            SELECT c.id, c.created_at, c.amount, c.id_user,
+                   u.ref, u.first_name, u.last_name, u.email, u.phone,
+                   d.comment,
+                   e.reason, e.frequency
+            FROM cashflow c
+            INNER JOIN "user" u ON c.id_user = u.id
+            LEFT JOIN donation d ON c.id = d.id
+            LEFT JOIN expense e ON c.id = e.id
+            WHERE c.id_user = ?
+            ORDER BY c.created_at DESC
+        """;
+
+        try (Connection connection = databaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            preparedStatement.setString(1, userId);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    cashFlows.add(mapResultSetToCashFlow(resultSet));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la récupération des cashflows pour l'utilisateur: " + userId, e);
         }
-        if ("expense".equalsIgnoreCase(type)) {
-            return findExpenses();
-        }
-        throw new IllegalArgumentException("Type inconnu: " + type);
+
+        return cashFlows;
     }
 
-    private List<CashFlow> findDonations() throws SQLException {
-        String sql = "SELECT id, created_at, amount, id_user, comment "
-                + "FROM donation ORDER BY created_at DESC";
+    private CashFlow mapResultSetToCashFlow(ResultSet rs) throws SQLException {
+        User user = User.builder()
+                .id(rs.getString("id_user"))
+                .ref(rs.getString("ref"))
+                .firstName(rs.getString("first_name"))
+                .lastName(rs.getString("last_name"))
+                .email(rs.getString("email"))
+                .phone(rs.getString("phone"))
+                .build();
 
-        List<CashFlow> donations = new ArrayList<>();
+        String comment = rs.getString("comment");
+        String reason = rs.getString("reason");
 
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                Donnationdto donation = new Donnationdto();
-                donation.setId(rs.getString("id"));
-                donation.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toInstant());
-                donation.setAmount(rs.getBigDecimal("amount"));
-                donation.setComment(rs.getString("comment"));
-                donations.add(donation);
-            }
+        if (comment != null) {
+            return new Donation(
+                    rs.getString("id"),
+                    rs.getTimestamp("created_at").toInstant(),
+                    rs.getBigDecimal("amount"),
+                    user,
+                    comment
+            );
         }
+        else if (reason != null) {
+            String frequencyStr = rs.getString("frequency");
+            Expense.ExpenseFrequency frequency = frequencyStr != null
+                    ? Expense.ExpenseFrequency.valueOf(frequencyStr)
+                    : null;
 
-        return donations;
-    }
-
-    private List<CashFlow> findExpenses() throws SQLException {
-        String sql = "SELECT id, created_at, amount, id_user, reason, frequency "
-                + "FROM expense ORDER BY created_at DESC";
-
-        List<CashFlow> expenses = new ArrayList<>();
-
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                Expense expense = new Expense();
-                expense.setId(rs.getString("id"));
-                expense.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toInstant());
-                expense.setAmount(rs.getBigDecimal("amount"));
-                expense.setIdUser(rs.getString("id_user"));
-                expense.setReason(rs.getString("reason"));
-                expense.setFrequency(Expense.ExpenseFrequency.valueOf(rs.getString("frequency")));
-                expenses.add(expense);
-            }
+            return new Expense(
+                    rs.getString("id"),
+                    rs.getTimestamp("created_at").toInstant(),
+                    rs.getBigDecimal("amount"),
+                    user,
+                    reason,
+                    frequency
+            );
         }
-
-        return expenses;
+        else {
+            return new CashFlow(
+                    rs.getString("id"),
+                    rs.getTimestamp("created_at").toInstant(),
+                    rs.getBigDecimal("amount"),
+                    user
+            );
+        }
     }
 }

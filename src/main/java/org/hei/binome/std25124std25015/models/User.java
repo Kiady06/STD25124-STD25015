@@ -3,6 +3,7 @@ package org.hei.binome.std25124std25015.models;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -16,4 +17,5 @@ public class User {
     private String email;
     private String phone;
     private List<CashFlow> clashFlows;
+
 }
