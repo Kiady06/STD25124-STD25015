@@ -4,11 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
 @Data
-@Builder
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
     private String id;
     private String ref;
@@ -16,6 +19,5 @@ public class User {
     private String lastName;
     private String email;
     private String phone;
-    private List<CashFlow> clashFlows;
-
+    private List<CashFlow> cashFlows;
 }

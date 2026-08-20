@@ -26,7 +26,6 @@ public class ExpenseController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdExpense);
     }
 
-    // Gestion des erreurs de validation (ex: utilisateur inexistant ou données manquantes)
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleBadRequest(IllegalArgumentException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
